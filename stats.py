@@ -3,7 +3,7 @@ from util import fmt_dur
 from datetime import date
 import customtkinter as ctk
 import history, month
-from rules import (goal_min, studied, week_days, weekly_minutes, analyze, level, propose_adjustment,
+from rules import (general_min, goal_min, studied, week_days, weekly_minutes, analyze, level, propose_adjustment,
                    reminder_due, grade, streak)
 from simulado import SimuladoDialog, WeightsDialog, ProposalDialog
 from theme import PRIMARY, GOLD, TEAL, RED, VIOLET, MUTED, LV, header, kpi, animate, chip, tag_color
@@ -70,7 +70,8 @@ class StatsTab(ctk.CTkFrame):
                    ("🔥", streak(d), "dias seguidos na meta", RED, "{:.0f}"),
                    ("📝", len(d["simulados"]), "simulados feitos", VIOLET, "{:.0f}")])
         s = self.section("Metas")
-        self.bar(s, f"{'✅' if hoje >= g else '⏳'} Hoje", hoje, g, right=f"{fmt_dur(hoje)} / {fmt_dur(g)}")
+        gen = general_min(d, today)
+        self.bar(s, f"{'✅' if hoje >= g else '⏳'} Hoje", hoje, g, right=f"{fmt_dur(hoje)} / {fmt_dur(g)}" + (f"  (inclui {fmt_dur(gen)} de Estudo Geral)" if gen else ""))
         self.bar(s, f"{'✅' if semana >= g * 7 else '⏳'} Semana", semana, g * 7, right=f"{fmt_dur(semana)} / {fmt_dur(g * 7)}")
         s = self.section("Matérias da semana")
         for subj, m in weekly_minutes(d["subjects"], d["daily_goal_h"]).items():

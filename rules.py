@@ -56,6 +56,10 @@ def week_days():
 def studied(d, day, subj="total"):
     return d["sessions"].get(day.isoformat(), {}).get(subj, 0)
 
+def general_min(d, day):
+    """Minutos de ESTUDO GERAL (sem matéria específica) do dia. Eles já entram no total do dia: contam direto para a Meta do Dia."""
+    return d["sessions"].get(day.isoformat(), {}).get("Geral", 0)
+
 def goal_min(d):
     return int(d["daily_goal_h"] * 60)
 
@@ -88,22 +92,33 @@ def overall(sim):
 def level(avg):
     return "crítico" if avg < 4 else "fraco" if avg < 6 else "ok" if avg < 8 else "forte"
 
+def sub_weights(sim):
+    """Peso de cada matéria na prova (1 quando a prova não tinha pesos diferentes)."""
+    if "subjects" in sim and sim.get("weighted"): return {k: v.get("weight", 1) or 1 for k, v in sim["subjects"].items()}
+    return {k: 1 for k in sub_scores(sim)}
+
+def wnorm(sim, s):
+    """Peso da matéria relativo à média da prova (1 = média; 2 = vale o dobro da média)."""
+    w = sub_weights(sim); m = sum(w.values()) / len(w) if w else 1
+    return w.get(s, 1) / m if m else 1
+
 def analyze(d, last=3):
-    """Normaliza tudo para 0-10: média dos últimos simulados por matéria, tendência e nível. Mais fracas primeiro."""
+    """Normaliza tudo para 0-10 nos últimos simulados: nota média, tendência e PRIORIDADE = taxa de erro x peso da matéria na prova."""
     sims, out = d["simulados"][-last:], []
     for s in {k for x in sims for k in sub_scores(x)}:
-        v = [sub_scores(x)[s] for x in sims if s in sub_scores(x)]
-        out.append({"subject": s, "avg": sum(v) / len(v), "last": v[-1], "trend": v[-1] - v[-2] if len(v) > 1 else 0, "n": len(v)})
-    return sorted(out, key=lambda r: r["avg"])
+        rows = [(sub_scores(x)[s], wnorm(x, s)) for x in sims if s in sub_scores(x)]; v = [r[0] for r in rows]; avg = sum(v) / len(v); wn = sum(r[1] for r in rows) / len(rows)
+        out.append({"subject": s, "avg": avg, "last": v[-1], "trend": v[-1] - v[-2] if len(v) > 1 else 0, "n": len(v), "wn": wn, "prio": (1 - avg / 10) * wn})
+    return sorted(out, key=lambda r: (-r["prio"], r["avg"]))
 
 def propose_adjustment(d):
-    """Pesos calculados ESTRITAMENTE a partir dos últimos 3 simulados (média 0-10 + tendência); o peso antigo não entra na conta."""
+    """Dificuldades (1-5) calculadas ESTRITAMENTE com os últimos 3 simulados: prioridade = taxa de erro x peso da prova (sem pesos, equivale a
+    5 - 0,4 x nota). Matérias que valem mais e onde se erra mais sobem; o peso antigo não entra na conta."""
     new, changes = dict(d["subjects"]), []
     for r in analyze(d, 3):
         s = r["subject"]
         if s not in new: continue
-        nw = max(1, min(5, int(5 - r["avg"] * 0.4 + (0.5 if r["trend"] <= -1.5 else -0.5 if r["trend"] >= 1.5 else 0) + 0.5)))
-        if nw != new[s]: changes.append((s, new[s], nw, r["avg"], r["trend"]))
+        nw = max(1, min(5, int(1 + 4 * min(1.0, r["prio"]) + (0.5 if r["trend"] <= -1.5 else -0.5 if r["trend"] >= 1.5 else 0) + 0.5)))
+        if nw != new[s]: changes.append((s, new[s], nw, r["avg"], r["trend"], r["wn"]))
         new[s] = nw
     return new, changes, build_schedule(new, d["daily_goal_h"], d["per_day"])
 

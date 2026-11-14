@@ -5,36 +5,24 @@ import customtkinter as ctk
 from theme import PRIMARY, GOLD, TEAL, MUTED, EDGE, animate
 from util import fmt_dur
 from . import catalog as C
+from .overlay import Overlay
 from .render import Camera, FX
 
-class ShopOverlay(ctk.CTkFrame):
+class ShopOverlay(Overlay):
+    title = "🛒 Loja da cidade"
     TABS = ["Prédios", "Veículos", "Praças"]
 
     def __init__(self, master, w):
-        super().__init__(master, corner_radius=16, border_width=2, border_color=GOLD)
-        self.w, self.tab, self.thumbs, self.btns, self.opened, self._mini = w, "Prédios", {}, [], False, None
-        head = ctk.CTkFrame(self, fg_color="transparent"); head.pack(fill="x", padx=14, pady=(10, 4))
-        ctk.CTkLabel(head, text="🛒 Loja da cidade", font=("Segoe UI", 18, "bold"), text_color=GOLD).pack(side="left")
-        self.pts = ctk.CTkLabel(head, text="", font=("Segoe UI", 14, "bold")); self.pts.pack(side="left", padx=14)
-        ctk.CTkButton(head, text="✕ Fechar", width=84, fg_color="gray30", command=self.close).pack(side="right")
-        body = ctk.CTkFrame(self, fg_color="transparent"); body.pack(fill="both", expand=True, padx=12, pady=(0, 10))
-        left = ctk.CTkFrame(body, width=290); left.pack(side="left", fill="y", padx=(0, 8)); left.pack_propagate(False)
+        super().__init__(master, w)
+        self.tab, self.thumbs, self.btns, self._mini = "Prédios", {}, [], None
+        self.pts = ctk.CTkLabel(self.head_extra, text="", font=("Segoe UI", 14, "bold")); self.pts.pack(side="left")
+        left = ctk.CTkFrame(self.content, width=290); left.pack(side="left", fill="y", padx=(0, 8)); left.pack_propagate(False)
         ctk.CTkLabel(left, text="🗺 Mapa da cidade (ano atual)", font=("Segoe UI", 13, "bold")).pack(pady=(10, 4))
         self.mini = ctk.CTkLabel(left, text=""); self.mini.pack(padx=8)
         self.mini_info = ctk.CTkLabel(left, text="", text_color=MUTED, wraplength=260, justify="left"); self.mini_info.pack(padx=10, pady=8)
-        right = ctk.CTkFrame(body, fg_color="transparent"); right.pack(side="left", fill="both", expand=True)
+        right = ctk.CTkFrame(self.content, fg_color="transparent"); right.pack(side="left", fill="both", expand=True)
         self.seg = ctk.CTkSegmentedButton(right, values=self.TABS, command=self.set_tab); self.seg.set(self.tab); self.seg.pack(anchor="w", pady=(0, 4))
         self.list = ctk.CTkScrollableFrame(right); self.list.pack(fill="both", expand=True)
-
-    # ---------- abrir / fechar ----------
-    def toggle(self): self.close() if self.opened else self.open()
-    def open(self):
-        self.opened = True; self.place(relx=.015, rely=.02, relwidth=.97, relheight=.96); self.lift()
-        self.winfo_toplevel().bind("<Escape>", lambda e: self.close()); self.refresh()
-    def close(self):
-        self.opened = False; self.place_forget()
-        try: self.winfo_toplevel().unbind("<Escape>")
-        except Exception: pass
 
     # ---------- conteúdo ----------
     @property

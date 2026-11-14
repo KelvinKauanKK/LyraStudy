@@ -35,3 +35,8 @@ Saves antigos continuam abrindo: se um modelo some do catálogo, os prédios del
 
 ## 5) Praças e carros
 Seguem o mesmo fluxo: `art-source/praça_level_N.png` (3 praças) e as folhas `carros*.png` (veja `CARS` em `tools/process_assets.py`).
+
+## Catálogo atual
+Famílias a–i em `art-source/buildings/families.json` (9 modelos): a Biblioteca de Madeira, b Residência de Tijolos (grátis), c Torre de Vidro, d Eco Escritório, e Capela Gótica,
+f Fábrica Steampunk, g Vila Mediterrânea, h Ecovila Solar, i Salão Nórdico. **Para tirar um modelo** apague a letra do `families.json` (e, se quiser, os PNGs) e rode o script de novo;
+**para trocar todos**, mantenha só as letras novas. Saves com modelos removidos continuam abrindo (viram o modelo atual).

@@ -25,7 +25,8 @@ class FocusTab(ctk.CTkFrame):
         self.phase_lbl = ctk.CTkLabel(L, text="", font=("Segoe UI", 15, "bold")); self.phase_lbl.pack(pady=(14, 0))
         self.clock = ctk.CTkLabel(L, text="", font=("Consolas", 30, "bold"), text_color=GOLD); self.clock.pack(pady=10, padx=6)
         self.pbar = ctk.CTkProgressBar(L, height=8, progress_color=GOLD); self.pbar.set(0); self.pbar.pack(fill="x", padx=20)
-        self.subj = ctk.CTkOptionMenu(L, values=["Geral"]); self.subj.pack(pady=4)
+        self.subj = ctk.CTkOptionMenu(L, values=["Geral"], command=lambda v: self.hint()); self.subj.pack(pady=(4, 0))
+        self.subj_hint = ctk.CTkLabel(L, text="", text_color=MUTED, wraplength=230); self.subj_hint.pack(pady=(0, 4))
         self.btn = ctk.CTkButton(L, text="▶ Iniciar Estudo", height=40, command=self.toggle, **PRIMARY)
         self.btn.pack(pady=10, padx=20, fill="x")
         ctk.CTkButton(L, text="↺ Reiniciar", fg_color="gray30", command=self.restart).pack(padx=20, fill="x")
@@ -131,10 +132,14 @@ class FocusTab(ctk.CTkFrame):
         ctk.CTkButton(w, text="Salvar", command=ok, **PRIMARY).pack(pady=8)
         build(c["mode"])
 
+    def hint(self):
+        """Estudo Geral (sem matéria específica) conta automaticamente para a Meta do Dia."""
+        self.subj_hint.configure(text="Estudo Geral: conta direto para a Meta do Dia" if self.subj.get() == "Geral" else "")
+
     def update_goal(self):
         d = self.app.data; g, got = goal_min(d), studied(d, clock.today())
         self.dlbl.configure(text=f"Meta de hoje: {fmt_dur(got)} / {fmt_dur(g)}"); animate(self.dbar, min(1, got / g) if g else 0, 600, True)
 
     def refresh(self):
-        self.subj.configure(values=list(self.app.data["subjects"]) + ["Geral"])
+        self.subj.configure(values=list(self.app.data["subjects"]) + ["Geral"]); self.hint()
         self.update_goal(); self.city.refresh()

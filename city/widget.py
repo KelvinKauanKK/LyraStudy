@@ -14,7 +14,7 @@ from storage import save
 from theme import GOLD, MUTED, PRIMARY
 from . import catalog as C
 from .engine import City
-from .panel import CityPanel
+from .functions import FunctionsOverlay
 from .shop import ShopOverlay
 from .render import Renderer, Camera, FX
 from .traffic import Traffic
@@ -29,14 +29,14 @@ class CityWidget(ctk.CTkFrame):
         top = ctk.CTkFrame(self, fg_color="transparent"); top.pack(fill="x")
         self.seg = ctk.CTkSegmentedButton(top, values=[n for _, n in C.VIEWS], command=self.set_view); self.seg.pack(side="left")
         self.seg.set(dict(C.VIEWS)[self.city.s["view"]])
+        ctk.CTkButton(top, text="⚙ Funções", width=96, command=lambda: self.funcs.toggle(), **PRIMARY).pack(side="right", padx=4)
         ctk.CTkButton(top, text="🛒 Loja", width=80, command=lambda: self.shop.toggle(), **PRIMARY).pack(side="right", padx=4)
         self.toast = ctk.CTkLabel(top, text="", text_color=GOLD, font=("Segoe UI", 13, "bold")); self.toast.pack(side="right", padx=8)
         self.info = ctk.CTkLabel(top, text="", text_color=MUTED); self.info.pack(side="right", padx=8)
-        self.canvas = tk.Canvas(self, height=self.H, highlightthickness=0, bg="#0a0d1a"); self.canvas.pack(fill="x", pady=4)
+        self.canvas = tk.Canvas(self, height=self.H, highlightthickness=0, bg="#0a0d1a"); self.canvas.pack(fill="both", expand=True, pady=4)   # o mapa ocupa toda a área
         self.photo = ImageTk.PhotoImage(Image.new("RGB", (self.W, self.H))); self.img_id = self.canvas.create_image(0, 0, anchor="nw", image=self.photo)
         self.canvas.bind("<Configure>", self.on_size); self.canvas.bind("<ButtonRelease-1>", self.on_click)   # só clique (selecionar quadrado)
-        self.panel = CityPanel(self, self); self.panel.pack(fill="both", expand=True)
-        self.shop = ShopOverlay(self, self)                               # overlay da loja (aparece por cima da cidade)
+        self.shop, self.funcs = ShopOverlay(self, self), FunctionsOverlay(self, self)      # overlays (aparecem por cima da cidade, um por vez)
         self.traffic.sync(self.city, self.now()); self.fit(); self.start()
 
     # ---------- ciclo de vida ----------
@@ -87,7 +87,7 @@ class CityWidget(ctk.CTkFrame):
         """Estado mudou: salva, ressincroniza carros, reenquadra se a região mudou e atualiza painel/cabeçalho."""
         save(self.app.data); self.traffic.sync(self.city, self.now())
         if force_fit or self.city.region() != self.reg: self.fit()
-        self.panel.refresh(); self.shop.refresh(); self.app.update_header()
+        self.funcs.refresh(); self.shop.refresh(); self.app.update_header()
 
     def fit(self):
         self.reg = self.city.region(); self.cam.fit(self.reg, self.W, self.H, self.R.tall(self.city, self.reg)); self.R.prewarm(self.city, self.cam)
@@ -100,9 +100,13 @@ class CityWidget(ctk.CTkFrame):
         self.apply(self.city.study(1))
     def reload(self):
         """Recria a cidade a partir do data.json (usado pelo Admin ao reiniciar)."""
-        self.city = City(self.app.data); self.city.sync_days(); self.traffic.sync(self.city, self.now()); self.fit(); self.panel.refresh(); self.shop.refresh()
+        self.city = City(self.app.data); self.city.sync_days(); self.traffic.sync(self.city, self.now()); self.fit(); self.funcs.refresh(); self.shop.refresh()
     def refresh(self):
-        self.info.configure(text=f"{self.city.D} dias • {len(self.city.s['t'])} quadrados"); self.panel.refresh(); self.shop.refresh()
+        self.info.configure(text=f"{self.city.D} dias • {len(self.city.s['t'])} quadrados"); self.funcs.refresh(); self.shop.refresh()
+
+    def close_overlays(self, keep=None):
+        for o in (self.shop, self.funcs):
+            if o is not keep and o.opened: o.close()
 
     # ---------- canvas ----------
     def on_size(self, e):
@@ -121,4 +125,4 @@ class CityWidget(ctk.CTkFrame):
         c, cam = self.city, self.cam; u, v = (e.x - cam.ox) / cam.k, 2 * (e.y - cam.oy) / cam.k; gx, gy = math.floor((u + v) / 2), math.floor((v - u) / 2); R = c.region()
         for d in c.geom()["days"]:
             if d["x"] == gx and d["y"] == gy and R[0] <= gx < R[2] and R[1] <= gy < R[3]:
-                c.s["sel"] = d["i"]; c.touch(); save(self.app.data); self.panel.refresh(); return
+                c.s["sel"] = d["i"]; c.touch(); save(self.app.data); self.funcs.refresh(); return

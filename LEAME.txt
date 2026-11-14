@@ -12,15 +12,20 @@ COMO USAR
    rende 10 pontos e XP para o predio em foco da LYRA CITY, a metropole isometrica que fica nesta mesma aba:
    - cada dia em que voce bate a meta diaria vira um quadrado; 7 dias fundem-se em Semana, 4 semanas em Mes e 12 meses no Ano
      (visoes Dia / Semana / Mes / Ano no topo do mapa; a camera e fixa);
-   - botao "🛒 Loja": abre a loja por cima da cidade (minimapa + Predios, Veiculos e Pracas);
+   - botoes "🛒 Loja" e "⚙ Funcoes" abrem paineis por cima da cidade (Loja: minimapa + Predios/Veiculos/Pracas; Funcoes: territorio,
+     modo foco, fluxo automatico e quadrado selecionado). X ou Esc fecham;
    - pracas: metas do MES (1 hora, 1 dia, 7 dias) reiniciam todo mes; com 2+ liberadas surge uma praca nova a cada 5 dias;
-   - clique no logo "Lyra Study" (Modo Memoria): rever a foto e as metricas de cada ano concluido;
-   - botao "🔐 Admin" (ou Ctrl+Shift+A): conta de testes — primeiro acesso cria a senha; permite adiantar horas/pontos/niveis e avancar o calendario.
+   - clique no logo "Lyra Study" (Modo Memoria): rever a foto, as metricas, os simulados e os anexos de cada ano concluido;
+   - botao "❓ Tutorial" (topo): explica a cidade, os predios, as pracas, os simulados e o calculo do cronograma;
+   - modo Admin (testes): somente pelo atalho Ctrl+Shift+A (pede a senha de administrador).
    Tempos sao exibidos como "2h e 30 min".
 5. Revisao: flashcards com imagens, edicao, categorias/subcategorias e repeticao espacada.
 6. Desempenho (Visao geral / Mes / Simulados): nota do mes de 0 a 10, calendario e historico de simulados.
-   O reajuste de pesos usa SO os 3 ultimos simulados.
-7. Seu progresso fica em "data.json", ao lado do .exe (inclui a cidade). Copie esse arquivo para fazer backup.
+   Simulados: nome da prova, maximo de questoes, acertos POR MATERIA (o total e a soma automatica; a soma das questoes das
+   materias deve ser igual ao maximo), questoes anuladas (o teto cai e os acertos nelas sao abatidos), pesos por materia e
+   anexos (PDF, redacoes...). Busca por nome e abas com ate 10 simulados. O reajuste do cronograma usa SO os 3 ultimos
+   simulados e prioriza peso x taxa de erro. Estudo Geral (sem materia) conta direto para a Meta do Dia.
+7. Seu progresso fica em "data.json", ao lado do .exe (inclui a cidade). Os anexos dos simulados ficam na pasta "anexos" e as fotos exportadas em "snapshots". Copie esse arquivo para fazer backup.
    O antigo "Foco e Loja" com a casa de moveis foi substituido pela cidade (os pontos continuam valendo).
 
 AVISO DO WINDOWS

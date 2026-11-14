@@ -3,6 +3,8 @@ import os
 from datetime import date
 import customtkinter as ctk
 from storage import BASE
+from rules import overall
+from history import sim_card
 from theme import GOLD, MUTED, TEAL, PRIMARY
 from util import fmt_dur
 from . import catalog as C
@@ -36,8 +38,10 @@ class MemoryDialog(ctk.CTkToplevel):
         self.img = ctk.CTkImage(light_image=img, dark_image=img, size=self.SIZE); self.pic.configure(image=self.img)
         for x in self.info.winfo_children(): x.destroy()
         st = h["stats"] if h else {**City.year_stats(city.s["t"][city.ys():city.D]), "plazas": len(city.s["pz"]), "cars": len(city.s["oc"])}
+        idx = h["idx"] if h else city.year(); sims = [(i, x) for i, x in enumerate(self.w.app.data["simulados"]) if x.get("city_year", 0) == idx]   # simulados e anexos de cada ano ficam acessíveis aqui
         rows = [("📅 Dias concluídos", f"{st['days']} de {C.PER}"), ("⏱ Tempo de estudo", fmt_dur(st["minutes"])), ("🏢 Prédios", sum(st["buildings"].values())),
-                ("📈 Nível médio", st["avg_level"]), ("🌳 Praças", st["plazas"]), ("🚗 Carros na frota", st["cars"])]
+                ("📈 Nível médio", st["avg_level"]), ("🌳 Praças", st["plazas"]), ("🚗 Carros na frota", st["cars"]),
+                ("📝 Simulados no ano", len(sims)), ("🎯 Nota média dos simulados", f"{sum(overall(x) for _, x in sims) / len(sims):.1f}" if sims else "—")]
         for k, v in rows:
             r = ctk.CTkFrame(self.info, fg_color="transparent"); r.pack(fill="x"); ctk.CTkLabel(r, text=k, anchor="w").pack(side="left", padx=8); ctk.CTkLabel(r, text=str(v), text_color=TEAL).pack(side="right", padx=8)
         ctk.CTkLabel(self.info, text="Prédios por modelo", font=("Segoe UI", 13, "bold"), anchor="w").pack(fill="x", padx=8, pady=(10, 2))
@@ -45,6 +49,9 @@ class MemoryDialog(ctk.CTkToplevel):
             name = next((b["n"] for b in C.BLD if b["id"] == bid), bid); ctk.CTkLabel(self.info, text=f"• {name}: {n}", anchor="w", text_color=MUTED).pack(fill="x", padx=14)
         ctk.CTkLabel(self.info, text="Por nível", font=("Segoe UI", 13, "bold"), anchor="w").pack(fill="x", padx=8, pady=(10, 2))
         for lv, n in sorted((int(k), v) for k, v in st["levels"].items()): ctk.CTkLabel(self.info, text=f"• Nível {lv}: {n}", anchor="w", text_color=MUTED).pack(fill="x", padx=14)
+        ctk.CTkLabel(self.info, text="Simulados e anexos deste ano", font=("Segoe UI", 13, "bold"), anchor="w").pack(fill="x", padx=8, pady=(12, 2))
+        if not sims: ctk.CTkLabel(self.info, text="Nenhum simulado registrado neste ano.", text_color=MUTED, anchor="w").pack(fill="x", padx=14)
+        for i, x in sims[::-1]: sim_card(self.info, None, i, x, deletable=False)
     def export(self):
         city, h, key = self.cur; os.makedirs(os.path.join(BASE, "snapshots"), exist_ok=True)
         p = os.path.join(BASE, "snapshots", f"ano_{h['year'] if h else city.year() + 1}.png"); self.render(city, self.EXPORT).save(p); self.msg.configure(text=f"Foto salva em {p}")

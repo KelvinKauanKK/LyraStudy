@@ -10,8 +10,10 @@ city/
   traffic.py   carros em ruas de mão única (sem colisão entre si, -20% de tráfego)
   render.py    Pillow: malha viária, profundidade única (carros escondem atrás de prédios), câmera fixa, animações, cache
   widget.py    canvas + laço seguro (um único after) + botão 🛒 Loja   |  panel.py  foco/fluxo automático/prédio do dia aleatório
-  shop.py      LOJA em overlay (minimapa + Prédios/Veículos/Praças)    |  memory.py  Modo Memória (clique no logo)
-admin.py       conta Admin (senha com hash), simulação de estudo e de calendário   |  clock.py  relógio virtual   |  util.py  fmt_dur
+  shop.py      LOJA em overlay (minimapa + Prédios/Veículos/Praças)    |  functions.py  FUNÇÕES em overlay (território, modo foco, fluxo automático, quadrado selecionado)
+  memory.py    Modo Memória (clique no logo): foto do ano, métricas, simulados e anexos do ano
+admin.py       modo Admin só por Ctrl+Shift+A (senha fixa, guardada como hash), simulação de estudo e de calendário   |  clock.py  relógio virtual   |  util.py  fmt_dur
+exam.py        simulados: anuladas, abatimento, pesos, anexos persistentes, busca e paginação   |  history.py  aba Simulados   |  tutorial.py  tutorial embutido
 library.py     explorador de PDFs (pastas aninhadas)
 assets/city/   sprites WebP + meta.json + buildings.json (gerados por tools/process_assets.py)   |  art-source/  artes originais
 docs/NOVOS_PREDIOS.md   como inserir novos modelos de prédio e prompts
@@ -31,3 +33,12 @@ docs/NOVOS_PREDIOS.md   como inserir novos modelos de prédio e prompts
 ## Segurança do laço e cache (ver também a revisão anterior)
 Um único `after()` (33 ms; 50 ms se pesado; 100 ms com a aba oculta), `winfo_exists()` antes de cada quadro, exceções no desenho não derrubam o laço,
 câmera fixa, sprites e tamanhos em cache (0 `Image.open` e 0 `resize` por quadro).
+
+## Simulados (resumo das regras)
+- **Registro:** nome da prova + quantidade máxima de questões + matérias. Por matéria: questões, acertos, anuladas e, das anuladas, quantas estavam marcadas como acerto
+  (padrão: todas — como no exemplo). O total de acertos da prova é a soma automática; a soma das questões das matérias tem de ser igual ao máximo (`exam.compute_exam`).
+- **Anuladas:** `exam.adjust(total, acertos, anuladas, anuladas_acertadas)` → 20 questões, 3 anuladas, 9 acertos (incluindo as 3) = **6 de 17**.
+- **Pesos:** com "A prova possui pesos diferentes por matéria?" = Sim, a nota geral é média ponderada e o ajuste do cronograma usa **prioridade = taxa de erro × peso relativo**
+  (`rules.analyze` / `propose_adjustment`, sempre com os últimos 3 simulados). Sem pesos, é o cálculo padrão.
+- **Anexos:** copiados para `anexos/<id do simulado>/` (fora do data.json; nunca apagados na virada do ano ou ao reiniciar a cidade). Abrir/Baixar no histórico e no Modo Memória.
+- **Histórico:** busca por nome (sem acento/maiúsculas) e abas com no máximo 10 simulados. Cada simulado guarda `city_year`, então o Modo Memória mostra os simulados e anexos de cada ano.

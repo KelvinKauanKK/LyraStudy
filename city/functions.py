@@ -1,16 +1,20 @@
-"""Painel abaixo do mapa (a loja agora é o overlay shop.py): foco, fluxo automático, prédio do dia aleatório e quadrado selecionado."""
+"""Overlay "Funções": Função de Território, Modo Foco, Fluxo Automático e Quadrado Selecionado (antes ficavam no painel fixo)."""
 import customtkinter as ctk
 from theme import PRIMARY, GOLD, TEAL, MUTED, animate
 from . import catalog as C
+from .overlay import Overlay
 
-class CityPanel(ctk.CTkFrame):
+class FunctionsOverlay(Overlay):
+    title = "⚙ Funções"
+
     def __init__(self, master, w):
-        super().__init__(master, fg_color="transparent"); self.w = w
-        self.body = ctk.CTkScrollableFrame(self); self.body.pack(fill="both", expand=True); self.build()
+        super().__init__(master, w)
+        self.body = ctk.CTkScrollableFrame(self.content); self.body.pack(fill="both", expand=True)
 
     @property
     def c(self): return self.w.city
-    def refresh(self): self.build()
+    def refresh(self):
+        if self.opened: self.build()
     def card(self, title=None):
         f = ctk.CTkFrame(self.body); f.pack(fill="x", padx=4, pady=4)
         if title: ctk.CTkLabel(f, text=title, font=("Segoe UI", 14, "bold"), anchor="w").pack(fill="x", padx=12, pady=(8, 2))
@@ -22,7 +26,7 @@ class CityPanel(ctk.CTkFrame):
     def build(self):
         for x in self.body.winfo_children(): x.destroy()
         c, s = self.c, self.c.s; jn = c.jn()
-        f = self.card("Fusão do território")
+        f = self.card("🏙 Função de Território")
         self.bar(f, f"Dia → Semana ({jn % 7}/7)", jn % 7 / 7); self.bar(f, f"Semana → Mês ({(jn // 7) % 4}/4)", (jn // 7) % 4 / 4); self.bar(f, f"Mês → Ano ({jn // 28}/12)", jn / C.PER, GOLD)
         f = self.card("🎯 Modo Foco")
         cand = c.candidates(); lab = {i: f"Dia {i + 1} — {C.bld(c.tile(i)['b'])['n']} (Nv {c.tile(i)['lv']}/{C.bld(c.tile(i)['b'])['max']})" for i in cand}
@@ -39,7 +43,7 @@ class CityPanel(ctk.CTkFrame):
         if s["rand"]: sw2.select()
         names = {C.bld(i)["n"]: i for i in s["ob"]}
         if names: om = ctk.CTkOptionMenu(f, values=list(names), command=lambda v: self.set_flag("model", names[v], True)); om.set(C.bld(s["model"])["n"] if s["model"] in s["ob"] else list(names)[0]); om.pack(fill="x", padx=12, pady=(3, 8))
-        f = self.card("Quadrado selecionado"); t = c.tile(s["sel"])
+        f = self.card("📍 Quadrado selecionado"); t = c.tile(s["sel"])
         if not t: ctk.CTkLabel(f, text="Clique num quadrado do mapa.", text_color=MUTED).pack(padx=12, pady=4)
         elif t["b"]: ctk.CTkLabel(f, text=f"Dia {s['sel'] + 1} • {C.bld(t['b'])['n']} • nível {t['lv']}/{C.bld(t['b'])['max']}").pack(padx=12, pady=4)
         else:
@@ -47,8 +51,6 @@ class CityPanel(ctk.CTkFrame):
             r = ctk.CTkFrame(f, fg_color="transparent"); r.pack(fill="x", padx=8, pady=6)
             ctk.CTkButton(r, text="🎲 Aleatório", width=100, command=lambda: self.w.apply(c.build(s["sel"])), **PRIMARY).pack(side="left", padx=3)
             for i in s["ob"]: ctk.CTkButton(r, text=C.bld(i)["n"], width=90, fg_color="gray30", command=lambda i=i: self.w.apply(c.build(s["sel"], i))).pack(side="left", padx=3)
-        if self.w.app.admin_on:
-            f = self.card("🛠 Admin"); ctk.CTkButton(f, text="Abrir painel Admin", command=self.w.app.admin_click, **PRIMARY).pack(anchor="w", padx=12, pady=(2, 10))
 
     def set_focus(self, i): self.c.s["focus"] = i; self.c.touch(); self.w.changed()
     def set_flag(self, k, v, raw=False):

@@ -29,6 +29,30 @@
    "n": "Capela Gótica",
    "p": 1400,
    "max": 3
+  },
+  {
+   "id": "fab",
+   "n": "Fábrica Steampunk",
+   "p": 1800,
+   "max": 4
+  },
+  {
+   "id": "med",
+   "n": "Vila Mediterrânea",
+   "p": 2300,
+   "max": 4
+  },
+  {
+   "id": "ecs",
+   "n": "Ecovila Solar",
+   "p": 2800,
+   "max": 3
+  },
+  {
+   "id": "nor",
+   "n": "Salão Nórdico",
+   "p": 3400,
+   "max": 3
   }
  ]
 }
